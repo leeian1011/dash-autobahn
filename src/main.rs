@@ -12,7 +12,9 @@ fn somei32() -> Option<Vec<i32>> {
     m.insert("die".to_string(), "shit".to_string());
     let yx = m.get("die");
 
-    let y:Vec<i32> = x.into_iter().rev()
+    let z: [u32; 10] = [0; 10];
+    
+    let y:Vec<i32> = x.into_iter()
      .map(|value| value)
      .collect::<Vec<_>>();
 
