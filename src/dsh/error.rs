@@ -40,3 +40,13 @@ impl DasherError for std::string::FromUtf8Error {
         eprintln!("dsh: could not parse into string.\n{:?}", self)
     }
 }
+
+impl DasherError for std::env::VarError {
+    fn log(&self) -> () {
+        eprintln!("dsh: {:?}", self)
+    }
+}
+
+
+
+
