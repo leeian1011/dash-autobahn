@@ -1,22 +1,67 @@
-mod dasher;
-use std::{vec, collections::BTreeMap};
+mod dsh;
+
+use std::env::args;
+
+use dsh::{
+dasher::Dasher,
+get_current_directory,
+OptionCode,
+get_opt,
+lane::Lane};
+
+
 fn main() {
-    let newvec = somei32();
-        newvec.map(|vec| vec.into_iter().map(|value| value).collect::<Vec<_>>());
+    let env_args:Vec<String> = args().collect();
+    match get_opt(&env_args) {
+        OptionCode::Add => {
+            let mut dsh: Dasher = match Dasher::new() {
+                Ok(dasher) => dasher,
+                Err(dasher_err) => {
+                    println!("dsh: could not load lanes");
+                    return dasher_err.log();
+                },
+            };
+            
+            let directory = match get_current_directory() {
+                Ok(directory) => match dsh.validate_directory(&directory){
+                    Ok(_) => directory,
+                    Err(dash_error) => return dash_error.log(),
+                },
+                Err(process_err) => return process_err.log(),
+            };
+            
+            let new_lane: Lane = {
+                Lane {
+                    index: dsh.get_key(),
+                    nickname: String::from(""),
+                    lane: directory,
+                }
+            };
+
+            dsh.add_lane(new_lane);
+            dsh.save_lanes();
+        },
+        OptionCode::List => {
+            let dsh: Dasher = match Dasher::new() {
+                Ok(dasher) => dasher,
+                Err(load_err) => return load_err.log(),
+            };
+
+            let data: Vec<(u32, String)> = dsh.cache.iter()
+                .map(|(_, lane)| {
+                    (lane.index, lane.lane.clone())
+                })
+                .collect::<Vec<_>>();
+            
+            data.iter().for_each(|(index, directory)| {
+                println!("{}: {}", index, directory);
+            });
+        },
+        OptionCode::Move => {},
+        OptionCode::Dash => {},
+        OptionCode::Help => {},
+        OptionCode::Remove => {},
+        OptionCode::CommandError => {},
+    }
 }
 
-fn somei32() -> Option<Vec<i32>> {
-    let x = vec![1, 2, 3, 4, 5];
-    let mut m: BTreeMap<String, String> = BTreeMap::new();
-
-    m.insert("die".to_string(), "shit".to_string());
-    let yx = m.get("die");
-
-    let z: [u32; 10] = [0; 10];
-    
-    let y:Vec<i32> = x.into_iter()
-     .map(|value| value)
-     .collect::<Vec<_>>();
-
-    Some(x)
-}
