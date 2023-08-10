@@ -41,7 +41,7 @@ pub fn get_opt(args: &Vec<String>) -> OptionCode {
 
     match args[1].as_str() {
         "a" => {
-            if args.len() != 2 {
+            if args.len() > 3 {
                 OptionCode::CommandError
             }else {
                 OptionCode::Add
