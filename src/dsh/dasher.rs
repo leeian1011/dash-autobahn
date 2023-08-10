@@ -4,7 +4,7 @@ use crate::dsh::error::DashError;
 use super::{lane::Lane, error::DasherError};
 use std::{collections::BTreeMap,
         io::{Read, Write},
-        fs::File,
+        fs::File, env,
         
 };
 pub enum IndexNickname {
@@ -31,8 +31,14 @@ pub struct Dasher {
 impl Dasher {
 
     fn load_lanes() -> Result<BTreeMap<u32, Lane>, Box<dyn DasherError>> {
+        let mut path = match env::var("DASH_CACHE_PATH") {
+            Ok(string) => string,
+            Err(env_err) => return Err(Box::new(env_err)),
+        };
+
+        path.push_str("lanes.json");
         let mut cache: String = String::new();
-        match File::open("src/cache/lanes.json") {
+        match File::open(path) {
             Ok(mut file) => {
                 match file.read_to_string(&mut cache) {
                     Ok(_) => {},
@@ -69,9 +75,14 @@ impl Dasher {
             Err(serde_err) => return Err(Box::new(serde_err))
         };
 
+        let mut path = match env::var("DASH_CACHE_PATH") {
+            Ok(path) => path,
+            Err(env_err) => return Err(Box::new(env_err)),
+        };
 
+        path.push_str("lanes.json"); 
 
-        match File::create("src/cache/lanes.json") {
+        match File::create(path) {
             Ok(mut file) => match file.write_all(&cached_dash.as_bytes()) {
                 Ok(_) => return Ok(()),
                 Err(io_err) => return Err(Box::new(io_err))
