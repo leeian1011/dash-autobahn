@@ -96,7 +96,6 @@ impl Dasher {
     }
      
     pub fn remove_lane(&mut self, identifier: IndexNickname) -> Result<String, Box<dyn DasherError>>
-        where
             {
                 match identifier {
                     IndexNickname::Index(index) => {
@@ -167,8 +166,57 @@ impl Dasher {
 
         return Ok(())
     }
-}
 
+    pub fn swap(&mut self, first_index: IndexNickname, second_index: IndexNickname) -> Result<(), Box<dyn DasherError>> {
+        match first_index {
+            IndexNickname::Index(index_one) => {
+                match second_index {
+                    IndexNickname::Index(index_two) => {
+                        let mut lane_one = if let Some(lane) = self.cache.remove(&index_one) {
+                            lane
+                        } else {
+                            return Err(Box::new(DashError::new(format!("dsh: lane does not exist at index {index_one}"))));
+                        };
+
+                        let mut lane_two = if let Some(lane) = self.cache.remove(&index_one) {
+                            lane
+                        } else {
+                            lane_one.index = index_two;
+                            self.add_lane(lane_one);
+                            return Ok(());
+                        };
+
+                        lane_one.index = index_two;
+                        lane_two.index = index_one;
+
+                        self.add_lane(lane_one);
+                        self.add_lane(lane_two);
+                        return Ok(());
+                    },
+                    IndexNickname::Nickname(nickname) => {
+                        let mut lane = if let Some(lane) = self.cache.remove(&index_one) {
+                            lane
+                        } else {
+                            return Err(Box::new(DashError::new(format!("dsh: does not exist at lane {index_one}"))));
+                        };
+
+                        lane.nickname = nickname;
+
+                        self.add_lane(lane);
+                        return Ok(())
+                    }
+                }
+            },
+            IndexNickname::Nickname(nickname_one) => {
+                match second_index {
+                    IndexNickname::Nickname(nickname_two) => {
+                        let lanes = self.cache.values()
+                    }
+                }
+            }
+        }
+    }
+}
 
 
 
