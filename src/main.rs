@@ -9,6 +9,8 @@ OptionCode,
 get_opt,
 lane::Lane};
 
+use crate::dsh::dasher::IndexNickname;
+
 
 fn main() {
     let env_args:Vec<String> = args().collect();
@@ -23,17 +25,27 @@ fn main() {
             };
             
             let directory = match get_current_directory() {
-                Ok(directory) => match dsh.validate_directory(&directory){
+                Ok(directory) => match dsh.validate(&directory){
                     Ok(_) => directory,
                     Err(dash_error) => return dash_error.log(),
                 },
                 Err(process_err) => return process_err.log(),
             };
-            
+
+            let nickname = if let true = env_args.len() == 3 {
+                match dsh.validate(&env_args[2]) {
+                    Ok(_) => env_args[2].clone(),
+                    Err(validate_err) => return validate_err.log(),
+                }
+            } else {
+                "".to_string()
+            };
+
+
             let new_lane: Lane = {
                 Lane {
                     index: dsh.get_key(),
-                    nickname: String::from(""),
+                    nickname,
                     lane: directory,
                 }
             };
@@ -54,13 +66,32 @@ fn main() {
                 .collect::<Vec<_>>();
             
             data.iter().for_each(|(index, directory)| {
-                println!("{}: {}", index, directory);
+                print!("{}: {}", index, directory);
             });
         },
         OptionCode::Move => {},
-        OptionCode::Dash => {},
+        OptionCode::Dash => { println!("whats good bro") },
         OptionCode::Help => {},
-        OptionCode::Remove => {},
+        OptionCode::Remove => {
+            let mut dsh: Dasher = match Dasher::new() {
+                Ok(dasher) => dasher,
+                Err(load_err) => return load_err.log(),
+            };
+            
+            let identifier: IndexNickname = match env_args[2].trim().parse::<u32>() {
+                Ok(index) => IndexNickname::from(index),
+                Err(_) => IndexNickname::from(env_args[2].clone()),
+            };
+            
+            match dsh.remove_lane(identifier) {
+                Ok(message) =>  {
+                    println!("{message}")
+                },
+                Err(remove_err) => return remove_err.log(),
+            }
+
+            dsh.save_lanes();
+        },
         OptionCode::CommandError => {},
     }
 }
