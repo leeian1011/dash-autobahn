@@ -30,15 +30,6 @@ pub struct Dasher {
 
 impl Dasher {
 
-    pub fn new() -> Result<Dasher, Box<dyn DasherError>> {
-        Ok(Dasher {
-            cache: match Dasher::load_lanes() {
-                Ok(dasher_cache) => dasher_cache,
-                Err(dasher_err) => return Err(dasher_err),
-            }
-        })
-    }
-
     fn load_lanes() -> Result<BTreeMap<u32, Lane>, Box<dyn DasherError>> {
         let mut cache: String = String::new();
         match File::open("src/cache/lanes.json") {
@@ -62,7 +53,16 @@ impl Dasher {
 
         Ok(tree_map)
     }
-    
+
+    pub fn new() -> Result<Dasher, Box<dyn DasherError>> {
+        Ok(Dasher {
+            cache: match Dasher::load_lanes() {
+                Ok(dasher_cache) => dasher_cache,
+                Err(dasher_err) => return Err(dasher_err),
+            }
+        })
+    }
+
     pub fn save_lanes(&self) -> Result<(), Box<dyn DasherError>> {
         let cached_dash: String = match serde_json::to_string(&self.cache.values().collect::<Vec<&Lane>>()) {
             Ok(cache_json) => cache_json,
@@ -84,14 +84,14 @@ impl Dasher {
         self.cache.insert(lane.index, lane);
     }
      
-    pub fn remove_lane(&mut self, identifier: IndexNickname) -> Result<(), ()>
+    pub fn remove_lane(&mut self, identifier: IndexNickname) -> Result<String, Box<dyn DasherError>>
         where
             {
                 match identifier {
                     IndexNickname::Index(index) => {
                         match self.cache.remove(&index) {
-                            Some(_) => Ok(()),
-                            None => Err(()),
+                            Some(_) => Ok(format!("dsh: lane at index {index} removed.")),
+                            None => Err(Box::new(DashError::new(format!("lane does not exist at index {index}")))),
                         }
                     },
                     IndexNickname::Nickname(nickname) => {
@@ -104,15 +104,15 @@ impl Dasher {
                         };
 
                         if index == -1 {
-                            return Err(());
+                            return Err(Box::new(DashError::new(format!("lane nicknamed '{nickname}' does not exist"))));
                         }
                         
                         match self.cache.remove(&(index as u32)) {
                             Some(_) => {
-                                return Ok(());
+                                return Ok(format!("dsh: lane nicknamed {nickname} removed."));
                             },
                             None => {
-                                return Err(());
+                                return Err(Box::new(DashError::new(format!("lane could not be removed"))));
                             },
                         };
                     }
@@ -141,10 +141,16 @@ impl Dasher {
         }
     }
 
-    pub fn validate_directory(&self, new_directory: &str) -> Result<(), Box<dyn DasherError>> {
+    pub fn validate(&self, input: &str) -> Result<(), Box<dyn DasherError>> {
+        if input == "" {
+            return Ok(())
+        }
+
         for (_, pairs) in &self.cache {
-            if pairs.lane == new_directory {
+            if pairs.lane == input {
                 return Err(Box::new(DashError::new("lane already exists!".to_string())));
+            } else if pairs.nickname == input {
+                return Err(Box::new(DashError::new(format!("lane with nickname '{input}' already exists!"))));
             }
         }
 
