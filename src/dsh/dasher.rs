@@ -4,7 +4,7 @@ use crate::dsh::{error::DashError, IndexNickname};
 use super::{lane::Lane, error::DasherError};
 use std::{collections::BTreeMap,
         io::{Read, Write},
-        fs::File, env,
+        fs::File, env, cmp::Ordering,
         
 };
 
@@ -144,16 +144,25 @@ impl Dasher {
         }
     }
 
-    pub fn validate(&self, input: &str) -> Result<(), Box<dyn DasherError>> {
+    pub fn validate(&self, input: &String) -> Result<(), Box<dyn DasherError>> {
         if input == "" {
             return Ok(())
         }
+        
+        let values: Vec<&Lane> = self.values_as_vec();
 
-        for (_, pairs) in &self.cache {
-            if pairs.lane == input {
-                return Err(Box::new(DashError::new("lane already exists!".to_string())));
-            } else if pairs.nickname == input {
-                return Err(Box::new(DashError::new(format!("lane with nickname '{input}' already exists!"))));
+        for lane in values {
+            match lane.lane.cmp(input) {
+                Ordering::Equal => {
+                    return Err(Box::new(DashError::new("lane for this directory already exists".to_string())));
+                },
+                _ => {},
+            }
+            match lane.nickname.cmp(input) {
+                Ordering::Equal => {
+                    return Err(Box::new(DashError::new(format!("lane with nickname {} already exists.", lane.nickname))));
+                },
+                _ => {},
             }
         }
 
