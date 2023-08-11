@@ -9,7 +9,7 @@ OptionCode,
 get_opt,
 lane::Lane};
 
-use crate::dsh::dasher::IndexNickname;
+use crate::dsh::IndexNickname;
 
 
 fn main() {
@@ -65,6 +65,7 @@ fn main() {
                 .collect::<Vec<_>>();
             
                 println!("dsh:");
+
             data.iter().for_each(|(index, nickname, directory)| {
                 if nickname != "" {
                     println!("{}:{}", index, nickname);
