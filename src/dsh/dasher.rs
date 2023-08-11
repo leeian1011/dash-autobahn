@@ -9,10 +9,13 @@ use std::{collections::BTreeMap,
 };
 
 pub struct Dasher {
-   pub cache: BTreeMap<u32, Lane>
+   cache: BTreeMap<u32, Lane>
 }
-
+ 
 impl Dasher {
+    pub fn iter(&self) -> impl Iterator<Item=&Lane> {
+        self.cache.iter().map(|(_, lane)| lane)
+    }
 
     fn load_lanes() -> Result<BTreeMap<u32, Lane>, Box<dyn DasherError>> {
         let mut path = match env::var("DASH_CACHE_PATH") {
