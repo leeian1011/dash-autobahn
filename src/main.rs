@@ -58,8 +58,8 @@ fn main() {
                 Err(load_err) => return load_err.log(),
             };
 
-            let data: Vec<(u32, String, String)> = dsh.cache.iter()
-                .map(|(_, lane)| {
+            let data: Vec<(u32, String, String)> = dsh.iter()
+                .map(|lane| {
                     (lane.index, lane.nickname.clone(), lane.lane.clone())
                 })
                 .collect::<Vec<_>>();
