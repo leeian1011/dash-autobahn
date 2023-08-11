@@ -74,13 +74,26 @@ fn main() {
             });
         },
         OptionCode::Move => {
-            let dsh: Dasher = match Dasher::new() {
+            let mut dsh: Dasher = match Dasher::new() {
                 Ok(dasher) => dasher,
                 Err(load_err) => return load_err.log(),
             };
+            let index_one = match env_args[2].trim().parse::<u32>() {
+                Ok(index) => IndexNickname::from(index),
+                Err(_) => IndexNickname::from(env_args[2].clone()),
+            };
 
-            let first_identifier: IndexNickname = IndexNickname::from(env_args[2].clone());
-            let second_identifier: IndexNickname = IndexNickname::from(env_args[3].clone());
+            let index_two = match env_args[3].trim().parse::<u32>() {
+                Ok(index) => IndexNickname::from(index),
+                Err(_) => IndexNickname::from(env_args[3].clone()),
+            };    
+            
+            match dsh.swap(index_one, index_two) {
+                Ok(_) => {},
+                Err(swap_err) => return swap_err.log(),
+            };
+
+            dsh.save_lanes();
         },
         OptionCode::Dash => { println!("whats good bro") },
         OptionCode::Help => {},
