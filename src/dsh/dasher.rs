@@ -1,5 +1,5 @@
 #![allow(unused_variables, dead_code)]
-use crate::dsh::error::DashError;
+use crate::dsh::{error::DashError, IndexNickname};
 
 use super::{lane::Lane, error::DasherError};
 use std::{collections::BTreeMap,
@@ -7,22 +7,6 @@ use std::{collections::BTreeMap,
         fs::File, env,
         
 };
-pub enum IndexNickname {
-    Index(u32),
-    Nickname(String),
-}
-
-impl From<u32> for IndexNickname {
-    fn from(value: u32) -> Self {
-        IndexNickname::Index(value)
-    }
-}
-
-impl From<String> for IndexNickname {
-    fn from(value: String) -> Self {
-        IndexNickname::Nickname(value)
-    }
-}
 
 pub struct Dasher {
    pub cache: BTreeMap<u32, Lane>
@@ -70,7 +54,8 @@ impl Dasher {
     }
 
     pub fn save_lanes(&self) -> Result<(), Box<dyn DasherError>> {
-        let cached_dash: String = match serde_json::to_string(&self.cache.values().collect::<Vec<&Lane>>()) {
+        let values: Vec<&Lane> = self.values_as_vec();
+        let cached_dash: String = match serde_json::to_string(&values) {
             Ok(cache_json) => cache_json,
             Err(serde_err) => return Err(Box::new(serde_err))
         };
@@ -105,7 +90,7 @@ impl Dasher {
                         }
                     },
                     IndexNickname::Nickname(nickname) => {
-                        let lanes: Vec<&Lane> = self.cache.values().collect();
+                        let lanes: Vec<&Lane> = self.values_as_vec();
                         let mut index: i32 = -1;
                         for lane in lanes {
                             if lane.nickname == nickname {
@@ -128,6 +113,11 @@ impl Dasher {
                     }
                 }
             }
+    pub fn values_as_vec(&self) -> Vec<&Lane> {
+        let lanes: Vec<&Lane> = self.cache.values().collect::<Vec<_>>();
+        
+        lanes
+    }
 
     pub fn get_key(&self) -> u32 {
         let keys: Vec<&u32> = self.cache.keys().collect::<Vec<&u32>>();
@@ -210,7 +200,7 @@ impl Dasher {
             IndexNickname::Nickname(nickname_one) => {
                 match second_index {
                     IndexNickname::Nickname(nickname_two) => {
-                        let lanes: Vec<&Lane> = self.cache.values().collect::<Vec<_>>();
+                        let lanes: Vec<&Lane> = self.values_as_vec();
                         let mut index: i32 = -1; 
                         for lane in lanes {
                             if lane.nickname == nickname_two {
@@ -231,7 +221,7 @@ impl Dasher {
                         return Ok(())
                     },
                     IndexNickname::Index(index) => {
-                        let lanes: Vec<&Lane> = self.cache.values().collect::<Vec<_>>();
+                        let lanes: Vec<&Lane> = self.values_as_vec();
                         let mut old_index: i32 = -1;
                         for lane in lanes {
                             if lane.nickname == nickname_one {
