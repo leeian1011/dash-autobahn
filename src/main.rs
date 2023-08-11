@@ -1,6 +1,6 @@
 mod dsh;
 
-use std::{env::args, process::exit};
+use std::{env::args, process::exit, io::Write};
 
 use dsh::{
 dasher::Dasher,
@@ -9,7 +9,7 @@ OptionCode,
 get_opt,
 lane::Lane};
 
-use crate::dsh::IndexNickname;
+use crate::dsh::{IndexNickname, error::DasherError};
 
 enum ShellSignal {
     ADD,
@@ -35,7 +35,9 @@ fn main() {
             
             let directory = match get_current_directory() {
                 Ok(directory) => match dsh.validate(&directory){
-                    Ok(_) => directory.trim().to_string(),
+                    Ok(_) => {
+                        directory
+                    },
                     Err(dash_error) => { 
                         dash_error.log();
                         exit(ShellSignal::ERROR as i32);
@@ -46,7 +48,6 @@ fn main() {
                     exit(ShellSignal::ERROR as i32);
                 }
             };
-
             let nickname = if let true = env_args.len() == 3 {
                 match dsh.validate(&env_args[2]) {
                     Ok(_) => env_args[2].clone(),
@@ -92,13 +93,26 @@ fn main() {
                 })
                 .collect::<Vec<_>>();
             
-                println!("dsh:");
+                let message = format!("dsh:");
+                let mut stdout = std::io::stdout().lock();
+                if let Err(write_err) = stdout.write_all(message.as_bytes()) {
+                    write_err.log();
+                    exit(ShellSignal::ERROR as i32);
+                }
 
             data.iter().for_each(|(index, nickname, directory)| {
                 if nickname != "" {
-                    println!("{}:{}", index, nickname);
+                    let message = format!("\\n{}:{}", index, nickname);
+                    if let Err(write_err) = stdout.write_all(message.as_bytes()) {
+                        write_err.log();
+                        exit(ShellSignal::ERROR as i32);
+                    }
                 } else {
-                    println!("{}:{}", index, directory);
+                    let message = format!("\\n{}:{}", index, directory);
+                    if let Err(write_err) = stdout.write_all(message.as_bytes()) {
+                        write_err.log();
+                        exit(ShellSignal::ERROR as i32);
+                    }
                 }
             });
 
