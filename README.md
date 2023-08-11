@@ -7,6 +7,14 @@ Built with the memory safe Rust :^)
 - Nickname-able lanes!
 - Powerful list function that allows us to list the directory within a lane!
 
+## Todo(s)
+
+1. ~~all basic functionality from the C-dsh~~
+2. ~~dasher engine~~
+3. proper error handling output
+4. help messages
+
+
 ## Learning exercise
 This project is just to familiarize myself with the intricacies and improve
 my foundational and fundamental understanding of rust!<br>
@@ -27,4 +35,23 @@ just object notation its not that deep i know :p)
 
 - Taking advantage of powerful iterators and traits from the standard
 library like `From<T>`.
+
+- Cool point about `PartialEq` and comparing `String` and `&str`! Using the standard
+library `cmp` module is necessary to avoid having `/path/to/final` being considered
+`==` to `/path/to`.
+```rust
+    if string_var == slice_var {
+        //do something
+    }
+    
+    match string_var.cmp(slice_var.to_string()) {
+        _ => //do something
+    }
+```
+
+
+
+
+
+
 
