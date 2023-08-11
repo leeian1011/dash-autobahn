@@ -47,7 +47,7 @@ impl DasherError for std::env::VarError {
 
 impl DasherError for DashError {
     fn log(&self) -> () {
-        let message = format!("dsh: {}", self.message);
+        let message = format!("dsh: {}\n", self.message);
 
         let mut stdout = stdout().lock();
 
