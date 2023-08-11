@@ -1,4 +1,3 @@
-pub mod codes;
 pub mod dasher;
 pub mod lane;
 pub mod error;
@@ -6,6 +5,23 @@ pub mod error;
 use std::process::{Command, Stdio};
 
 use crate::dsh::error::DasherError;
+
+pub enum IndexNickname {
+    Index(u32),
+    Nickname(String),
+}
+
+impl From<u32> for IndexNickname {
+    fn from(value: u32) -> Self {
+        IndexNickname::Index(value)
+    }
+}
+
+impl From<String> for IndexNickname {
+    fn from(value: String) -> Self {
+        IndexNickname::Nickname(value)
+    }
+}
 
 pub fn get_current_directory() -> Result<String, Box<dyn DasherError>>{
     let process = match Command::new("pwd").stdout(Stdio::piped()).spawn() {
