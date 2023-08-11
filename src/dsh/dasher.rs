@@ -178,7 +178,7 @@ impl Dasher {
                             return Err(Box::new(DashError::new(format!("dsh: lane does not exist at index {index_one}"))));
                         };
 
-                        let mut lane_two = if let Some(lane) = self.cache.remove(&index_one) {
+                        let mut lane_two = if let Some(lane) = self.cache.remove(&index_two) {
                             lane
                         } else {
                             lane_one.index = index_two;
@@ -210,7 +210,61 @@ impl Dasher {
             IndexNickname::Nickname(nickname_one) => {
                 match second_index {
                     IndexNickname::Nickname(nickname_two) => {
-                        let lanes = self.cache.values()
+                        let lanes: Vec<&Lane> = self.cache.values().collect::<Vec<_>>();
+                        let mut index: i32 = -1; 
+                        for lane in lanes {
+                            if lane.nickname == nickname_two {
+                                return Err(Box::new(DashError::new(format!("another lane with nickname {nickname_two} exists!"))));
+                            }
+                            if lane.nickname == nickname_one {
+                                index = lane.index as i32;
+                            }
+                        }
+                        if index != -1 {
+                            self.cache.entry(index as u32).and_modify(|lane| {
+                                lane.nickname = nickname_two;
+                            });
+                        } else {
+                            return Err(Box::new(DashError::new(format!("lane with nickname {nickname_one} does not exist!"))));
+                        }
+                        
+                        return Ok(())
+                    },
+                    IndexNickname::Index(index) => {
+                        let lanes: Vec<&Lane> = self.cache.values().collect::<Vec<_>>();
+                        let mut old_index: i32 = -1;
+                        for lane in lanes {
+                            if lane.nickname == nickname_one {
+                                old_index = lane.index as i32;
+                            }
+                        }
+                        
+                        if old_index == -1 {
+                            return Err(Box::new(DashError::new(format!("lane with nickname '{nickname_one}' does not exist!"))));
+                        }
+
+                        let mut lane_one = match self.cache.remove(&(old_index as u32)) {
+                            Some(lane) => lane,
+                            None => {
+                                return Err(Box::new(DashError::new(format!("could not extract lane with nickname '{nickname_one}' from dasher"))));
+                            },
+                        };
+                        let mut lane_two = match self.cache.remove(&index) {
+                            Some(lane) => lane,
+                            None => {
+                                lane_one.index = index;
+                                self.add_lane(lane_one);
+                                return Ok(());
+                            },
+                        };
+
+                        lane_one.index = index;
+                        lane_two.index = old_index as u32;
+
+                        self.add_lane(lane_one);
+                        self.add_lane(lane_two);
+
+                        return Ok(());
                     }
                 }
             }
